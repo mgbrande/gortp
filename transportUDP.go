@@ -148,7 +148,7 @@ func (tp *TransportUDP) CloseWrite() {
 // if callback is not nil
 
 func (tp *TransportUDP) readDataPacket() {
-	var buf [defaultBufferSize]byte
+	buf := make([]byte, packetBufferSize)
 
 	tp.dataRecvStop = false
 	for {
@@ -161,6 +161,7 @@ func (tp *TransportUDP) readDataPacket() {
 			continue
 		}
 		if err != nil {
+		    fmt.Println("RTP: readDataPacket err", err)
 			break
 		}
 		rp := newDataPacket()
@@ -179,7 +180,7 @@ func (tp *TransportUDP) readDataPacket() {
 }
 
 func (tp *TransportUDP) readCtrlPacket() {
-	var buf [defaultBufferSize]byte
+	buf := make([]byte, packetBufferSize)
 
 	tp.ctrlRecvStop = false
 	for {

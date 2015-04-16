@@ -93,7 +93,10 @@ const (
 
 // nullArray is what it's names says: a long array filled with zeros.
 // used to clear (fill with zeros) arrays/slices inside a buffer by copying.
-var nullArray [1200]byte
+var nullArray = make([]byte, defaultBufferSize)
+
+// buffer size used to create raw packet buffers
+var packetBufferSize = defaultBufferSize
 
 type RawPacket struct {
 	inUse    int
@@ -128,6 +131,12 @@ type DataPacket struct {
 	payloadLength int16
 }
 
+// SetPacketBufferSize changes the default buffer size used to process rtp packets
+func SetPacketBufferSize(sizeBytes int) {
+	packetBufferSize = sizeBytes
+	nullArray = make([]byte, sizeBytes)
+}
+
 var freeListRtp = make(chan *DataPacket, freeListLengthRtp)
 
 func newDataPacket() (rp *DataPacket) {
@@ -136,7 +145,7 @@ func newDataPacket() (rp *DataPacket) {
 	case rp = <-freeListRtp: // Got one; nothing more to do.
 	default:
 		rp = new(DataPacket) // None free, so allocate a new one.
-		rp.buffer = make([]byte, defaultBufferSize)
+		rp.buffer = make([]byte, packetBufferSize)
 	}
 	rp.buffer[0] = version2Bit // RTP: V = 2, P, X, CC = 0
 	rp.inUse = rtpHeaderLength
@@ -485,7 +494,7 @@ func newCtrlPacket() (rp *CtrlPacket, offset int) {
 	case rp = <-freeListRtcp: // Got one; nothing more to do.
 	default:
 		rp = new(CtrlPacket) // None free, so allocate a new one.
-		rp.buffer = make([]byte, defaultBufferSize)
+		rp.buffer = make([]byte, packetBufferSize)
 	}
 	rp.buffer[0] = version2Bit // RTCP: V = 2, P, RC = 0
 	rp.inUse = rtcpHeaderLength
