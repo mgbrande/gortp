@@ -26,6 +26,7 @@ import (
 	"net"
 	"sync"
 	"time"
+	"fmt"
 )
 
 // Session contols and manages the resources and actions of a RTP session.
@@ -425,7 +426,8 @@ func (rs *Session) ListenOnTransports() (err error) {
 //
 func (rs *Session) OnRecvData(rp *DataPacket) bool {
 
-	if !rp.IsValid() {
+	if !rp.IsValid() {	
+	    fmt.Println("GoRtp Error: Invalid RTP packet received, discarding")
 		rp.FreePacket()
 		return false
 	}
@@ -483,6 +485,7 @@ func (rs *Session) OnRecvData(rp *DataPacket) bool {
 	select {
 	case rs.dataReceiveChan <- rp: // forwarded packet, that's all folks
 	default:
+	    fmt.Println("GoRtp Error: Data channel is full, packet dropped")
 		rp.FreePacket() // either channel full or not created - free packet
 	}
 	return true
